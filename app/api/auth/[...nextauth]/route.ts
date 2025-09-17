@@ -14,6 +14,7 @@ export interface User {
   department?: string;
 }
 
+
 declare module 'next-auth' {
   interface User {
     id: string;
@@ -25,6 +26,7 @@ declare module 'next-auth' {
     user: {
       id: string;
       email: string;
+      name: string;
       role: string;
       department?: string;
     };
@@ -105,8 +107,11 @@ export const authOptions: NextAuthOptions = {
 if (profileError || !profile) return null;
 // log('[Auth] Profile fetched:', profile, profileError);
 
-const departmentName = profile.departments?.name  || 'Unknown';
-const roleName = profile.roles?.name || 'student';
+// const departmentName = profile.departments?.name  || 'Unknown';
+// const roleName = profile.roles?.name || 'student';
+const departmentName = (Array.isArray(profile.departments) ? profile.departments[0] : profile.departments)?.name || 'Unknown';
+const roleName = (Array.isArray(profile.roles) ? profile.roles[0] : profile.roles)?.name || 'student';
+
 
 return {
   id: userId,

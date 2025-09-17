@@ -2,7 +2,7 @@ import { NextAuthOptions, Session } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import supabaseServer from './supabaseServer';
 
-export type UserRole = 'student' | 'coordinator' | 'hod' | 'admin' | 'professor';
+export type UserRole = 'student' | 'coordinator' | 'Hod' | 'admin' | 'professor';
 
 export interface User {
   id: string;

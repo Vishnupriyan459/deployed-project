@@ -74,8 +74,9 @@ export default function Sidebar({ isMobileMenuOpen, onMenuClose }: SidebarProps)
   if (!user) return null; // Shouldn’t really happen if status is authenticated
 
   // Normalize user role to match navigation keys (e.g., 'hod' -> 'Hod')
-  const normalizedRole = user.role === 'hod' ? 'Hod' : user.role;
-  const userNavigation = navigation[normalizedRole as UserRole] || [];
+  const normalizedRole: string = user.role.toLowerCase() === 'hod' ? 'Hod' : user.role;
+const userNavigation = navigation[normalizedRole as keyof typeof navigation] || [];
+
   // console.log("User data:", user.department, session);
 
   return (
@@ -132,7 +133,7 @@ export default function Sidebar({ isMobileMenuOpen, onMenuClose }: SidebarProps)
               />
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-700 capitalize">
-                  {user.role === 'hod' ? 'Head of Department' : user.role}
+                  {user.role === 'Hod' ? 'Head of Department' : user.role}
                 </p>
                 {user.department && (
                   <p className="text-xs text-gray-500">{user.department}</p>
