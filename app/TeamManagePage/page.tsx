@@ -31,7 +31,7 @@ export default function TeamManagePage() {
     if (!user || user.role !== 'Hod') return;
 
     try {
-      const res = await fetch(`/api/Team_manage?role=professor&department=${user.department}`);
+      const res = await fetch(`/api/team_manage?role=professor&department=${user.department}`);
       if (!res.ok) throw new Error('Failed to fetch professors');
       const data: Profile[] = await res.json();
       setProfiles(data);

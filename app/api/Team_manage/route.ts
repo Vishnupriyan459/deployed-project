@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import supabaseServer from '@/lib/supabaseServer';
 
+
 // export async function GET(req: NextRequest) {
 //   const { searchParams } = new URL(req.url);
 //   const roleName = searchParams.get('role');         // Example: 'professor'
@@ -13,7 +14,7 @@ import supabaseServer from '@/lib/supabaseServer';
 //   // Step 1: Get role UUID
 //   const { data: roleData, error: roleError } = await supabaseServer
 //     .from('roles')
-//     .select('id')
+//     .select('id, name')
 //     .eq('name', roleName)
 //     .single();
 
@@ -24,7 +25,7 @@ import supabaseServer from '@/lib/supabaseServer';
 //   // Step 2: Get department UUID
 //   const { data: deptData, error: deptError } = await supabaseServer
 //     .from('departments')
-//     .select('id')
+//     .select('id, name')
 //     .eq('name', departmentName)
 //     .single();
 
@@ -35,7 +36,13 @@ import supabaseServer from '@/lib/supabaseServer';
 //   // Step 3: Get profiles
 //   const { data, error } = await supabaseServer
 //     .from('profiles')
-//     .select('id, full_name, email, role, dept')
+//     .select(`
+//       id,
+//       full_name,
+//       email,
+//       role,
+//       dept
+//     `)
 //     .eq('role', roleData.id)
 //     .eq('dept', deptData.id);
 
@@ -43,7 +50,14 @@ import supabaseServer from '@/lib/supabaseServer';
 //     return NextResponse.json({ error: error.message }, { status: 500 });
 //   }
 
-//   return NextResponse.json(data);
+//   // Step 4: Map profiles to include roleName and departmentName
+//   const profilesWithNames = data.map(profile => ({
+//     ...profile,
+//     roleName: roleData.name,
+//     deptName: deptData.name,
+//   }));
+
+//   return NextResponse.json(profilesWithNames);
 // }
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -93,8 +107,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Step 4: Map profiles to include roleName and departmentName
-  const profilesWithNames = data.map(profile => ({
+  // ✅ Step 4: Safely map profiles (null → empty array)
+  const profilesWithNames = (data ?? []).map(profile => ({
     ...profile,
     roleName: roleData.name,
     deptName: deptData.name,
