@@ -1,10 +1,9 @@
 // app/api/auth/[...nextauth]/route.ts
-import NextAuth, { NextAuthOptions } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import supabaseServer from '@/lib/supabaseServer'; // default export
-import { log } from 'node:console';
+import NextAuth, { NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import supabaseServer from "@/lib/supabaseServer"; // your createClient wrapper
 
-export type UserRole = 'student' | 'coordinator' | 'hod' | 'admin' | 'professor';
+export type UserRole = "student" | "coordinator" | "hod" | "admin" | "professor";
 
 export interface User {
   id: string;
@@ -14,8 +13,8 @@ export interface User {
   department?: string;
 }
 
-
-declare module 'next-auth' {
+// Extend NextAuth types
+declare module "next-auth" {
   interface User {
     id: string;
     role: string;
@@ -42,93 +41,82 @@ declare module 'next-auth' {
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
-      name: 'credentials',
+      name: "credentials",
       credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' }
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        // 1️⃣ Sign in with Supabase
-        const { data: authData, error: authError } = await supabaseServer.auth.signInWithPassword({
-          email: credentials.email,
-          password: credentials.password
-        });
+        // 🔹 Step 1: Supabase Auth login
+        const { data: authData, error: authError } =
+          await supabaseServer.auth.signInWithPassword({
+            email: credentials.email,
+            password: credentials.password,
+          });
 
-        if (authError || !authData.user) return null;
+        if (authError || !authData.user) {
+          console.error("[Auth] Login failed:", authError?.message);
+          return null;
+        }
 
         const userId = authData.user.id;
 
-        // // 2️⃣ Fetch profile + department in single query
-        // const { data: profile, error: profileError } = await supabaseServer
-        //   .from('profiles')
-        //   .select(`
-        //     id,
-        //     full_name,
-        //     email,
-        //     role,
-        //     dept,
-        //     departments (
-        //       departments
-        //     )
-        //   `)
-        //   .eq('id', userId)
-        //   .maybeSingle();
+        // 🔹 Step 2: Fetch profile
+        const { data: profile, error: profileError } = await supabaseServer
+          .from("profiles")
+          .select(
+            `
+            id,
+            full_name,
+            email,
+            dept,
+            role,
+            departments ( name ),
+            roles ( name )
+          `
+          )
+          .eq("id", userId)
+          .maybeSingle();
 
-        // if (profileError || !profile) return null;
+        if (profileError) {
+          console.error("[Auth] Profile fetch error:", profileError.message);
+        }
 
-        // // 3️⃣ Extract department name if exists
-        // const departmentName = profile.departments?.departments || 'Unknown';
+        if (!profile) {
+          console.error("[Auth] No profile found for user:", userId);
+          return null;
+        }
 
-        // // 4️⃣ Return user object
-        // return {
-        //   id: userId,
-        //   email: authData.user.email || 'unknown@example.com',
-        //   name: profile.full_name || authData.user.email,
-        //   role: profile.role || 'student',
-        //   department: departmentName
-        // };
-       const { data: profile, error: profileError } = await supabaseServer
-  .from('profiles')
-  .select(`
-    id,
-    full_name,
-    email,
-    dept,
-    role,
-    departments ( name ),
-    roles ( name )
-  `)
-  .eq('id', userId)
-  .maybeSingle();
+        // 🔹 Step 3: Normalize nested values
+        const departmentName =
+          (Array.isArray(profile.departments)
+            ? profile.departments[0]
+            : profile.departments
+          )?.name || "Unknown";
 
+        const roleName =
+          (Array.isArray(profile.roles) ? profile.roles[0] : profile.roles)
+            ?.name || "student";
 
-if (profileError || !profile) return null;
-// log('[Auth] Profile fetched:', profile, profileError);
-
-// const departmentName = profile.departments?.name  || 'Unknown';
-// const roleName = profile.roles?.name || 'student';
-const departmentName = (Array.isArray(profile.departments) ? profile.departments[0] : profile.departments)?.name || 'Unknown';
-const roleName = (Array.isArray(profile.roles) ? profile.roles[0] : profile.roles)?.name || 'student';
-
-
-return {
-  id: userId,
-  email: authData.user.email || 'unknown@example.com',
-  name: profile.full_name || authData.user.email,
-  role: roleName,
-  department: departmentName
-};
-
-
-      }
-    })
+        // 🔹 Step 4: Return user object to NextAuth
+        return {
+          id: userId,
+          email: authData.user.email || "unknown@example.com",
+          name: profile.full_name || authData.user.email,
+          role: roleName,
+          department: departmentName,
+        };
+      },
+    }),
   ],
+
   session: {
-    strategy: 'jwt',
-    maxAge: 24 * 60 * 60
+    strategy: "jwt",
+    maxAge: 24 * 60 * 60,
   },
+
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -147,11 +135,12 @@ return {
         session.user.department = token.department as string;
       }
       return session;
-    }
+    },
   },
+
   pages: {
-    signIn: '/auth/signin'
-  }
+    signIn: "/auth/signin",
+  },
 };
 
 const handler = NextAuth(authOptions);
