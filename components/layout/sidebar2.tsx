@@ -36,7 +36,7 @@ const navigation: Record<UserRole, NavigationItem[]> = {
   Hod: [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
     { name: 'Department Complaints', href: '/complaints', icon: FileText },
-    { name: 'Team Management', href: '/teamManagePage', icon: Users },
+    { name: 'Team Management', href: '/TeamManagePage', icon: Users },
   ],
   admin: [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
