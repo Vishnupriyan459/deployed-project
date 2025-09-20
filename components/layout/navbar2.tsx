@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Shield, User, LogOut, Menu, X } from 'lucide-react';
+import { Shield, User, LogOut, Menu, X, Link } from 'lucide-react';
 import { User as UserType } from '@/lib/auth';
 
 interface NavbarProps {
@@ -27,6 +27,7 @@ export default function Navbar({ onMenuToggle, isMobileMenuOpen }: NavbarProps) 
   const handleSignOut = () => {
     signOut({ callbackUrl: '/' });
   };
+  
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -105,9 +106,9 @@ export default function Navbar({ onMenuToggle, isMobileMenuOpen }: NavbarProps) 
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem >
                     <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
+                    <a href="/profile"><span>Profile</span></a>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>
